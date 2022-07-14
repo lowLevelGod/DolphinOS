@@ -1,13 +1,10 @@
-; org 0x7c00
+; THIS PRINTS USING BIOS
 
-bits 16
 
-start: 
-    mov bx, 0xCC
-    call MovCursor
-    mov esi, msg
-    call Print
-    jmp boot
+
+; Move a cursor to a specific location on screen 
+; BH = Y COORD
+; BL = X COORD
 
 MovCursor:
     push ebp
@@ -29,6 +26,11 @@ MovCursor:
     pop ebp
     ret
 
+; Print a character on screen at the current cursor positon
+; AL = CHAR TO PRINT
+; BL = TEXT COLOR
+; CX = NUMBER OF TIMES CHAR IS REPEATED
+
 PutChar:
     push ebp
     mov ebp, esp
@@ -46,6 +48,9 @@ PutChar:
     pop eax
     pop ebp
     ret
+
+; PRINTS STRING
+; DS:SI = ZERO TERMINATED STRING
 
 Print:
     push ebp
@@ -86,30 +91,3 @@ Print:
         pop eax
         pop ebp
         ret
-
-
-msg db "Welcome to Dolph World!", 0x0, 0ah, 0dh, 0h
-
-boot:
-    cli
-    cld
-
-    mov ax, 0x50
-    mov es, ax
-    xor bx, bx
-
-    mov al, 2
-    mov ch, 0
-    mov cl, 2
-    mov dh, 0
-    mov dl, 0
-
-    mov ah, 0x02
-    int 0x13
-    jmp 0x50:0x0
-
-    hlt
-
-times 510 - ($ - $$) db 0
-
-dw 0xaa55
