@@ -31,6 +31,24 @@ enum vga_color {
 	VGA_COLOR_LIGHT_BROWN = 14,
 	VGA_COLOR_WHITE = 15,
 };
+
+static inline void outb(uint16_t port, uint8_t val)
+{
+    asm volatile ( "outb %0, %1" : : "a"(val), "Nd"(port) );
+    /* There's an outb %al, $imm8  encoding, for compile-time constant port numbers that fit in 8b.  (N constraint).
+     * Wider immediate constants would be truncated at assemble-time (e.g. "i" constraint).
+     * The  outb  %al, %dx  encoding is the only option for all other cases.
+     * %1 expands to %dx because  port  is a uint16_t.  %w1 could be used if we had the port number a wider C type */
+}
+
+static inline uint8_t inb(uint16_t port)
+{
+    uint8_t ret;
+    asm volatile ( "inb %1, %0"
+                   : "=a"(ret)
+                   : "Nd"(port) );
+    return ret;
+}
  
 static inline uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg) 
 {
@@ -58,11 +76,16 @@ size_t terminal_column;
 uint8_t terminal_color;
 uint16_t* terminal_buffer;
  
+void set_terminal_color(enum vga_color fg, enum vga_color bg)
+{
+	terminal_color = vga_entry_color(fg, bg);
+}
+
 void terminal_initialize(void) 
 {
 	terminal_row = 0;
 	terminal_column = 0;
-	terminal_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
+	terminal_color = vga_entry_color(VGA_COLOR_CYAN, VGA_COLOR_BLACK);
 	terminal_buffer = (uint16_t*) 0xB8000;
 	for (size_t y = 0; y < VGA_HEIGHT; y++) {
 		for (size_t x = 0; x < VGA_WIDTH; x++) {
@@ -93,15 +116,51 @@ void terminal_putchar(char c)
 	}
 }
  
+char terminal_check_specialchar(char c)
+{
+	switch(c)
+	{
+		case '\n':
+			terminal_column = 0;
+			++terminal_row;
+			break;
+		default:
+			return 0x0;
+			break;
+	}
+
+	return 0x1;
+}
+
+void terminal_writestring(const char*);
+
 void terminal_write(const char* data, size_t size) 
 {
 	for (size_t i = 0; i < size; i++)
-		terminal_putchar(data[i]);
+	{
+		if (!terminal_check_specialchar(data[i]))
+			terminal_putchar(data[i]);
+	}
+}
+
+void terminal_set_cursor (int x, int y)
+{
+	uint16_t pos = y * VGA_WIDTH + x;
+	outb(0x3D4, 0x0F);
+	outb(0x3D5, (uint8_t) (pos & 0xFF));
+	outb(0x3D4, 0x0E);
+	outb(0x3D5, (uint8_t) ((pos >> 8) & 0xFF));
 }
  
 void terminal_writestring(const char* data) 
 {
 	terminal_write(data, strlen(data));
+	terminal_set_cursor(terminal_column, terminal_row);
+}
+
+void shell_start_text()
+{
+	terminal_writestring("DoS>");
 }
  
 void main(void) 
@@ -109,6 +168,6 @@ void main(void)
 	/* Initialize terminal interface */
 	terminal_initialize();
  
-	/* Newline support is left as an exercise. */
-	terminal_writestring("Hello, kernel World!\n");
+	terminal_writestring("Welcome to DolphinOS\n");
+	shell_start_text();
 }

@@ -14,13 +14,13 @@ keyhandler:
    out 0x20, al   ;
  
    and bl, 0x80   ; key released
-   jnz done   ; don't repeat
+   jnz done_key   ; don't repeat
  
    mov ax, [port60]
    mov  word [reg32], ax
    call printreg32
  
-done:
+done_key:
    iret
  
 port60   dw 0
