@@ -170,4 +170,5 @@ void main(void)
  
 	terminal_writestring("Welcome to DolphinOS\n");
 	shell_start_text();
+	terminal_writestring("Damn this really works!\n");
 }

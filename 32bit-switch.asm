@@ -1,5 +1,8 @@
 [bits 16]
 switch_to_pm:
+    ; mov bx, msg_real
+    ; call print
+    ; jmp $
     cli
     lgdt [gdt_descriptor]
     xor ax, ax

@@ -1,6 +1,6 @@
 ; load 'dh' sectors from drive 'dl' into ES:BX
 disk_load:
-    pusha
+    ; pusha
     ; reading from disk requires setting specific values in all registers
     ; so we will overwrite our input parameters from 'dx'. Let's save it
     ; to the stack for later use.
@@ -23,7 +23,7 @@ disk_load:
     pop dx
     cmp al, dh    ; BIOS also sets 'al' to the # of sectors read. Compare it.
     jne sectors_error
-    popa
+    ; popa
     ret
 
 
