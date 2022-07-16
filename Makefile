@@ -1,25 +1,35 @@
 
-bootloader: 
-	nasm -f bin bootloader.asm -o bootloader.bin
-interrupt:
-	nasm interrupt.asm -f elf -o interrupt.o
-qemu: disk_img
-	qemu-system-i386 disk.img
-disk_img:
-	dd if=bootloader.bin of=disk.img
-kernel:
-	i686-elf-gcc -c kernel.c -o kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-idt:
-	i686-elf-gcc -c idt.c -o idt.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-isr:
-	i686-elf-gcc -c isr.c -o isr.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-io:
-	i686-elf-gcc -c io.c -o io.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-utils:
-	i686-elf-gcc -c utils.c -o utils.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-kernel_entry:
-	nasm kernel_entry.asm -f elf -o kernel_entry.o
-link: kernel kernel_entry interrupt idt isr utils io
-	i686-elf-ld -o kernel.bin -Ttext 0x1000 kernel_entry.o utils.o io.o idt.o isr.o kernel.o interrupt.o --oformat binary
-os-image: bootloader link
-	cat bootloader.bin kernel.bin > os-image.bin
+C_SOURCES = $(wildcard src/boot/*.c src/cpu/*.c src/drivers/*.c src/kernel/*.c)
+HEADERS = $(wildcard headers/cpu/*.h headers/drivers/*.h headers/kernel/*.h)
+# Nice syntax for file extension replacement
+OBJ = ${C_SOURCES:.c=.o src/cpu/interrupt.o} 
+OUTS = $(wildcard src/boot/*.o src/cpu/*.o src/kernel/*.o)
+BINS = $(wildcard src/boot/*.bin src/cpu/*.bin src/kernel/*.bin)
+ELFS = $(wildcard src/boot/*.elf src/cpu/*.elf src/kernel/*.elf)
+
+DISK_IMG = disk.img
+
+# Change this if your cross-compiler is somewhere else
+CC = ~/opt/cross/bin/i686-elf-gcc
+LD = ~/opt/cross/bin/i686-elf-ld
+# GDB = /usr/local/i386elfgcc/bin/i386-elf-gdb
+# -g: Use debugging symbols in gcc
+CFLAGS = -g
+
+disk_img: src/boot/bootloader.bin src/kernel/kernel.bin
+	cat $^ > $(DISK_IMG)
+
+src/kernel/kernel.bin: src/boot/kernel_entry.o ${OBJ}
+	$(LD) -o $@ -Ttext 0x1000 $^ --oformat binary
+
+%.o: %.c ${HEADERS}
+	${CC} -ffreestanding -c $< -o $@ -I headers/cpu -I headers/kernel -I headers/drivers
+
+%.o: %.asm
+	nasm $< -f elf -o $@
+
+%.bin: %.asm
+	nasm $< -f bin -o $@ -i src/boot
+
+clean:
+	rm -rf $(BINS)  $(OUTS) $(DISK_IMG) $(ELFS)
