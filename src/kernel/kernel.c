@@ -16,20 +16,13 @@
 #error "This tutorial needs to be compiled with a ix86-elf compiler"
 #endif
  
-
-void shell_start_text()
-{
-	terminal_writestring("DoS>");
-}
- 
 void main(void) 
 {
 	/* Initialize terminal interface */
 	terminal_initialize();
  
-	terminal_writestring("Welcome to DolphinOS\n");
-	shell_start_text();
-	terminal_writestring("Damn this really works!\n");
+	// terminal_writestring("Welcome to DolphinOS\n");
+	// terminal_writestring("Damn this really works!\n");
 
 	isr_install();
 

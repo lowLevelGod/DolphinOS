@@ -34,6 +34,8 @@ uint16_t vga_entry(unsigned char uc, uint8_t color)
 const size_t VGA_WIDTH = 80;
 const size_t VGA_HEIGHT = 25;
 const size_t VGA_ADDRESS = 0xB8000;
+
+const char shell_start_text[5] = "DOS>";
  
 size_t terminal_row;
 size_t terminal_column;
@@ -57,6 +59,8 @@ void terminal_initialize(void)
 			terminal_buffer[index] = vga_entry(' ', terminal_color);
 		}
 	}
+
+	terminal_writestring(shell_start_text);
 }
  
 void terminal_setcolor(uint8_t color) 
@@ -70,6 +74,20 @@ void terminal_putentryat(char c, uint8_t color, size_t x, size_t y)
 	terminal_buffer[index] = vga_entry(c, color);
 }
  
+void terminal_set_cursor (int x, int y)
+{
+	uint16_t pos = y * VGA_WIDTH + x;
+	outb(0x3D4, 0x0F);
+	outb(0x3D5, (uint8_t) (pos & 0xFF));
+	outb(0x3D4, 0x0E);
+	outb(0x3D5, (uint8_t) ((pos >> 8) & 0xFF));
+}
+
+void terminal_removechar()
+{
+	terminal_putchar(0x08);
+}
+
 void terminal_putchar(char c) 
 {
 
@@ -91,13 +109,15 @@ void terminal_putchar(char c)
 		}
 		--terminal_row;
     }
-	terminal_putentryat(c, terminal_color, terminal_column, terminal_row);
-	if (++terminal_column == VGA_WIDTH) {
-		terminal_column = 0;
-		++terminal_row;
-		// if (++terminal_row == VGA_HEIGHT)
-		// 	terminal_row = 0;
+	if (!terminal_check_specialchar(c))
+	{
+		terminal_putentryat(c, terminal_color, terminal_column, terminal_row);
+		if (++terminal_column == VGA_WIDTH) {
+			terminal_column = 0;
+			++terminal_row;
+		}
 	}
+	terminal_set_cursor(terminal_column, terminal_row);
 }
  
 char terminal_check_specialchar(char c)
@@ -107,6 +127,14 @@ char terminal_check_specialchar(char c)
 		case '\n':
 			terminal_column = 0;
 			++terminal_row;
+			terminal_writestring(shell_start_text);
+			break;
+		case 0x08:
+			if (terminal_column > 0)
+			{
+				terminal_buffer[terminal_row * VGA_WIDTH + terminal_column - 1] = vga_entry(' ', terminal_color);
+				--terminal_column;
+			}
 			break;
 		default:
 			return 0x0;
@@ -122,22 +150,12 @@ void terminal_write(const char* data, size_t size)
 {
 	for (size_t i = 0; i < size; i++)
 	{
-		if (!terminal_check_specialchar(data[i]))
-			terminal_putchar(data[i]);
+		terminal_putchar(data[i]);
 	}
-}
-
-void terminal_set_cursor (int x, int y)
-{
-	uint16_t pos = y * VGA_WIDTH + x;
-	outb(0x3D4, 0x0F);
-	outb(0x3D5, (uint8_t) (pos & 0xFF));
-	outb(0x3D4, 0x0E);
-	outb(0x3D5, (uint8_t) ((pos >> 8) & 0xFF));
 }
  
 void terminal_writestring(const char* data) 
 {
 	terminal_write(data, strlen(data));
-	terminal_set_cursor(terminal_column, terminal_row);
+	// terminal_set_cursor(terminal_column, terminal_row);
 }
