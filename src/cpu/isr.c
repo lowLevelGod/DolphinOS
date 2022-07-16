@@ -1,7 +1,7 @@
-#include "isr.h"
-#include "idt.h"
-#include "io.h"
-#include "utils.h"
+#include "../../headers/cpu/isr.h"
+#include "../../headers/cpu/idt.h"
+#include "../../headers/drivers/io.h"
+#include "../../headers/kernel/utils.h"
 
 isr_t interrupt_handlers[256];
 

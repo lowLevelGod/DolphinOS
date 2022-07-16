@@ -1,5 +1,5 @@
-#include "utils.h"
-#include "io.h"
+#include "../../headers/kernel/utils.h"
+#include "../../headers/drivers/io.h"
 
 /* Hardware text mode color constants. */
 

@@ -3,7 +3,7 @@ C_SOURCES = $(wildcard src/boot/*.c src/cpu/*.c src/drivers/*.c src/kernel/*.c)
 HEADERS = $(wildcard headers/cpu/*.h headers/drivers/*.h headers/kernel/*.h)
 # Nice syntax for file extension replacement
 OBJ = ${C_SOURCES:.c=.o src/cpu/interrupt.o} 
-OUTS = $(wildcard src/boot/*.o src/cpu/*.o src/kernel/*.o)
+OUTS = $(wildcard src/boot/*.o src/cpu/*.o src/kernel/*.o src/drivers/*.o)
 BINS = $(wildcard src/boot/*.bin src/cpu/*.bin src/kernel/*.bin)
 ELFS = $(wildcard src/boot/*.elf src/cpu/*.elf src/kernel/*.elf)
 
@@ -23,7 +23,7 @@ src/kernel/kernel.bin: src/boot/kernel_entry.o ${OBJ}
 	$(LD) -o $@ -Ttext 0x1000 $^ --oformat binary
 
 %.o: %.c ${HEADERS}
-	${CC} -ffreestanding -c $< -o $@ -I headers/cpu -I headers/kernel -I headers/drivers
+	${CC} -ffreestanding -c $< -o $@
 
 %.o: %.asm
 	nasm $< -f elf -o $@

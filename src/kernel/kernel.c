@@ -1,8 +1,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include "isr.h"
-#include "io.h"
+#include "../../headers/cpu/isr.h"
+#include "../../headers/drivers/io.h"
  
 /* Check if the compiler thinks you are targeting the wrong operating system. */
 #if defined(__linux__)
