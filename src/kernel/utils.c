@@ -32,3 +32,10 @@ void int_to_ascii(int x, char* s)
         x /= 10;
     }
 }
+
+void memory_copy(char *source, char *dest, int nbytes) {
+    int i;
+    for (i = 0; i < nbytes; i++) {
+        *(dest + i) = *(source + i);
+    }
+}

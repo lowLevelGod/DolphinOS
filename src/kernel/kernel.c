@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include "../../headers/cpu/isr.h"
 #include "../../headers/drivers/io.h"
+#include "../../headers/cpu/timer.h"
+#include "../../headers/drivers/keyboard.h"
  
 /* Check if the compiler thinks you are targeting the wrong operating system. */
 #if defined(__linux__)
@@ -29,8 +31,11 @@ void main(void)
 	shell_start_text();
 	terminal_writestring("Damn this really works!\n");
 
-	 isr_install();
-    /* Test the interrupts */
-    __asm__ __volatile__("int $2");
-    __asm__ __volatile__("int $3");
+	isr_install();
+
+    asm volatile("sti");
+    // init_timer(50);
+    /* Comment out the timer IRQ handler to read
+     * the keyboard IRQs easier */
+    init_keyboard();
 }

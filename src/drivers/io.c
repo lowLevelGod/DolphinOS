@@ -33,6 +33,7 @@ uint16_t vga_entry(unsigned char uc, uint8_t color)
  
 const size_t VGA_WIDTH = 80;
 const size_t VGA_HEIGHT = 25;
+const size_t VGA_ADDRESS = 0xB8000;
  
 size_t terminal_row;
 size_t terminal_column;
@@ -49,7 +50,7 @@ void terminal_initialize(void)
 	terminal_row = 0;
 	terminal_column = 0;
 	terminal_color = vga_entry_color(VGA_COLOR_CYAN, VGA_COLOR_BLACK);
-	terminal_buffer = (uint16_t*) 0xB8000;
+	terminal_buffer = (uint16_t*) VGA_ADDRESS;
 	for (size_t y = 0; y < VGA_HEIGHT; y++) {
 		for (size_t x = 0; x < VGA_WIDTH; x++) {
 			const size_t index = y * VGA_WIDTH + x;
@@ -71,11 +72,31 @@ void terminal_putentryat(char c, uint8_t color, size_t x, size_t y)
  
 void terminal_putchar(char c) 
 {
+
+	if (terminal_row >= VGA_HEIGHT) {
+		terminal_buffer = (uint16_t*) VGA_ADDRESS;
+        int i;
+        for (size_t y = 1; y < VGA_HEIGHT; y++) {
+			for (size_t x = 0; x < VGA_WIDTH; x++) {
+				const size_t indexprev = (y - 1) * VGA_WIDTH + x;
+				const size_t indexcurrent = y * VGA_WIDTH + x;
+				terminal_buffer[indexprev] = terminal_buffer[indexcurrent];
+		}
+	}
+
+        /* Blank last line */
+		for (size_t x = 0; x < VGA_WIDTH; x++) {
+			const size_t index = (VGA_HEIGHT - 1) * VGA_WIDTH + x;
+			terminal_buffer[index] = vga_entry(' ', terminal_color);
+		}
+		--terminal_row;
+    }
 	terminal_putentryat(c, terminal_color, terminal_column, terminal_row);
 	if (++terminal_column == VGA_WIDTH) {
 		terminal_column = 0;
-		if (++terminal_row == VGA_HEIGHT)
-			terminal_row = 0;
+		++terminal_row;
+		// if (++terminal_row == VGA_HEIGHT)
+		// 	terminal_row = 0;
 	}
 }
  
