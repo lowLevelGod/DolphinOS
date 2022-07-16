@@ -11,7 +11,7 @@ second_stage:
 
 load_kernel:
     mov bx, KERNEL_OFFSET
-    mov dh, 2
+    mov dh, 13
     mov dl, [BOOT_DRIVE]
     
  
