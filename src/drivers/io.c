@@ -1,5 +1,6 @@
 #include "../../headers/kernel/utils.h"
 #include "../../headers/drivers/io.h"
+#include "../../headers/libc/string.h"
 
 /* Hardware text mode color constants. */
 

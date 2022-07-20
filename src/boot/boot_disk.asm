@@ -28,16 +28,16 @@ disk_load:
 
 
 disk_error:
-    mov si, DISK_ERROR
-    call sprint
+    ; mov si, DISK_ERROR
+    ; call sprint
     ; call print_nl
     mov dh, ah ; ah = error code, dl = disk drive that dropped the error
-    call printreg32 ; check out the code at http://stanislavs.org/helppc/int_13-1.html
+    ; call printreg16 ; check out the code at http://stanislavs.org/helppc/int_13-1.html
     jmp disk_loop
 
 sectors_error:
-    mov si, SECTORS_ERROR
-    call sprint
+    ; mov si, SECTORS_ERROR
+    ; call sprint
 
 disk_loop:
     jmp $

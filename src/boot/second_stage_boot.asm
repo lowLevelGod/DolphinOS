@@ -6,6 +6,17 @@ second_stage:
     ; call sprint
     
     call load_kernel
+    xor di, di
+    mov es, di
+    xor ax, ax
+    xor bx, bx
+    xor si, si
+    xor cx, cx
+    xor dx, dx
+
+    ; mov si, msg
+    ; call sprint
+    ; call do_e820
     call switch_to_pm
     jmp $
 
@@ -62,6 +73,7 @@ boot_pm:
 %include "gdt.asm"
 %include "32bit-switch.asm"
 %include "print_string_pm.asm"
+%include "e820memory_map.asm"
 
 msg_real db "Welcome to DolphinOS! <-- Real Mode -->", 0x0
 

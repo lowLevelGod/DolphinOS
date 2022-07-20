@@ -1,11 +1,11 @@
 
-C_SOURCES = $(wildcard src/boot/*.c src/cpu/*.c src/drivers/*.c src/kernel/*.c)
-HEADERS = $(wildcard headers/cpu/*.h headers/drivers/*.h headers/kernel/*.h)
+C_SOURCES = $(wildcard src/boot/*.c src/cpu/*.c src/drivers/*.c src/kernel/*.c src/libc/*.c)
+HEADERS = $(wildcard headers/cpu/*.h headers/drivers/*.h headers/kernel/*.h headers/libc/*.h)
 # Nice syntax for file extension replacement
 OBJ = ${C_SOURCES:.c=.o src/cpu/interrupt.o} 
-OUTS = $(wildcard src/boot/*.o src/cpu/*.o src/kernel/*.o src/drivers/*.o)
-BINS = $(wildcard src/boot/*.bin src/cpu/*.bin src/kernel/*.bin)
-ELFS = $(wildcard src/boot/*.elf src/cpu/*.elf src/kernel/*.elf)
+OUTS = $(wildcard src/boot/*.o src/cpu/*.o src/kernel/*.o src/drivers/*.o src/libc/*.o) 
+BINS = $(wildcard src/boot/*.bin src/cpu/*.bin src/kernel/*.bin src/libc/*.bin)
+ELFS = $(wildcard src/boot/*.elf src/cpu/*.elf src/kernel/*.elf src/libc/*.elf)
 
 DISK_IMG = disk.img
 

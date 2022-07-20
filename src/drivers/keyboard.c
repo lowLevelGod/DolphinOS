@@ -2,6 +2,7 @@
 #include "../../headers/drivers/io.h"
 #include "../../headers/cpu/isr.h"
 #include "../../headers/kernel/utils.h"
+#include "../../headers/libc/string.h"
 
 #define terminal_buffer_size 256
 #define keyboard_mapping_size 256

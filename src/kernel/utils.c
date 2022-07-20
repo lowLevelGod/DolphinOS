@@ -1,13 +1,5 @@
 #include "../../headers/kernel/utils.h"
-
-size_t strlen(const char* str) 
-{
-	size_t len = 0;
-	while (str[len])
-		len++;
-	return len;
-}
-
+#include "../../headers/libc/string.h"
 
 void int_to_ascii(int x, char* s)
 {
@@ -30,13 +22,6 @@ void int_to_ascii(int x, char* s)
     {
         s[i] = x % 10 + '0';
         x /= 10;
-    }
-}
-
-void memory_copy(char *source, char *dest, int nbytes) {
-    int i;
-    for (i = 0; i < nbytes; i++) {
-        *(dest + i) = *(source + i);
     }
 }
 
