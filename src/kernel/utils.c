@@ -1,28 +1,48 @@
 #include "../../headers/kernel/utils.h"
 #include "../../headers/libc/string.h"
+#define NO_BASE 16
 
-void int_to_ascii(int x, char* s)
+
+void int_to_ascii(uint64_t x, char* s)
 {
-    size_t len = strlen(s);
+    size_t len = 0;
     int c = x;
-    int nr_digits = 0;
+    if (c == 0)
+        s[len++] = '0';
     while (c)
     {
-        ++nr_digits;
-        c /= 10;
+        char result;
+        switch (c % NO_BASE)
+        {
+            case 10:
+                result = 'A';
+                break;
+            case 11:
+                result = 'B';
+                break;
+            case 12:
+                result = 'C';
+                break;
+            case 13:
+                result = 'D';
+                break;
+            case 14:
+                result = 'E';
+                break;
+            case 15:
+                result = 'F';
+                break;
+            default:
+                result = c % NO_BASE + '0';
+                break;
+        }
+        s[len++] = result;
+        c /= NO_BASE;
     } 
-
-    if ((size_t)nr_digits < len)
-    {
-        s[nr_digits] = '\0';
-        len = nr_digits;
-    }
-    
-    for (int i = len - 1; i >= 0; --i)
-    {
-        s[i] = x % 10 + '0';
-        x /= 10;
-    }
+    s[len++] = 'x';
+    s[len++] = '0';
+    s[len] = '\0';
+    reverse(s);
 }
 
 void append(char s[], char n) {

@@ -1,3 +1,4 @@
+[bits 16]
 ; use the INT 0x15, eax= 0xE820 BIOS function to get a memory map
 ; note: initially di is 0, be sure to set it to a value so that the BIOS code will not be overwritten. 
 ;       The consequence of overwriting the BIOS code will lead to problems like getting stuck in `int 0x15`
@@ -7,7 +8,15 @@ mmap_ent equ 0x9000             ; the number of entries will be stored at 0x8000
 do_e820:
     ; mov si, msg
     ; call sprint
-    mov dx, 80
+	; xchg bx, bx
+	xor dx, dx
+	xor cx, cx
+	xor ax, ax
+	xor bx, bx
+	xor di, di
+	xor si, si
+
+    mov dx, 0x0
     mov es, dx
     mov di, 0x9004          ; Set di to 0x8004. Otherwise this code will get stuck in `int 0x15` after some entries are fetched 
 	xor ebx, ebx		; ebx must be 0 to start

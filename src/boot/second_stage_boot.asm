@@ -16,7 +16,10 @@ second_stage:
 
     ; mov si, msg
     ; call sprint
-    ; call do_e820
+    pusha
+    call do_e820
+    popa
+    ; xchg bx, bx
     call switch_to_pm
     jmp $
 

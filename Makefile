@@ -7,7 +7,7 @@ OUTS = $(wildcard src/boot/*.o src/cpu/*.o src/kernel/*.o src/drivers/*.o src/li
 BINS = $(wildcard src/boot/*.bin src/cpu/*.bin src/kernel/*.bin src/libc/*.bin)
 ELFS = $(wildcard src/boot/*.elf src/cpu/*.elf src/kernel/*.elf src/libc/*.elf)
 
-DISK_IMG = disk.img
+DISK_IMG = /mnt/g/miscDolphinOS/disk.img
 
 # Change this if your cross-compiler is somewhere else
 CC = ~/opt/cross/bin/i686-elf-gcc
