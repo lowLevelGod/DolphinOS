@@ -41,6 +41,7 @@ do_e820:
 	jc short .e820f		; carry set means "end of list already reached"
 	mov edx, 0x0534D4150	; repair potentially trashed register
 .jmpin:
+	; xchg bx, bx
 	jcxz .skipent		; skip any 0 length entries
 	cmp cl, 20		; got a 24 byte ACPI 3.X response?
 	jbe short .notext

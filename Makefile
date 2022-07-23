@@ -22,8 +22,11 @@ disk_img: src/boot/bootloader.bin src/kernel/kernel.bin
 src/kernel/kernel.bin: src/boot/kernel_entry.o ${OBJ}
 	$(LD) -o $@ -Ttext 0x1000 $^ --oformat binary
 
+# src/kernel/kernel.bin: src/boot/kernel_entry.o ${OBJ}
+# 	$(CC) -T kernel_linker.ld -o $@  -ffreestanding -O2 -nostdlib $^ -lgcc
+
 %.o: %.c ${HEADERS}
-	${CC} -ffreestanding -c $< -o $@
+	${CC} $(CFLAGS) -ffreestanding -c $< -o $@
 
 %.o: %.asm
 	nasm $< -f elf -o $@
