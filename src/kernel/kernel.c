@@ -18,10 +18,12 @@ void main(void)
 
 	isr_install();
     // asm volatile("xchg %bx, %bx");
+    // asm volatile("int $2");
     asm volatile("sti");
+    // asm volatile("int $2");
     // init_timer(50);
     /* Comment out the timer IRQ handler to read
      * the keyboard IRQs easier */
     init_keyboard();
-    // init_bitmap();
+    init_bitmap();
 }
