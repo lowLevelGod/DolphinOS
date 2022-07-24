@@ -10,12 +10,12 @@ void init_bitmap()
 
 char tmp[20];
     //initialize bitmap with PAGE_ALLOCATED
-   for (size_t i = 0; i < PAGE_NUMBER; ++i)
+   for (size_t i = 4000; i < 4500; ++i)
    {
     // int_to_ascii(i, tmp);
     // terminal_writestring(tmp);
     // terminal_writestring("\n");
-        asm volatile("xchg %bx, %bx");
+        // asm volatile("xchg %bx, %bx");
         bitmap[i] = 0x08080808;
    }
 

@@ -27,9 +27,10 @@ lba_to_chs:
 ; params ax start sector/ cx number of sectors
 disk_load_lba:
     xor bx, bx
-    mov es, bx
     mov bx, KERNEL_OFFSET
-
+    mov es, bx
+    xor bx, bx
+    ; xchg bx, bx
     retry:
         mov di, 5
     sectorloop:
@@ -50,7 +51,11 @@ disk_load_lba:
         ; xchg bx, bx
         jmp $
     success:
-        add bx, 512
+        mov bx, es
+        add bx, 32
+        mov es, bx
+        xor bx, bx
+        ; xchg bx, bx
         inc ax
         loop retry
         ret

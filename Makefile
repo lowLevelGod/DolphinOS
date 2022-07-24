@@ -16,11 +16,26 @@ LD = ~/opt/cross/bin/i686-elf-ld
 # -g: Use debugging symbols in gcc
 CFLAGS = -g
 
+all: disk_img src/kernel/kernel.elf
+
 disk_img: src/boot/bootloader.bin src/kernel/kernel.bin
 	cat $^ > $(DISK_IMG)
 
-src/kernel/kernel.bin: src/boot/kernel_entry.o ${OBJ}
-	$(LD) -o $@ -Ttext 0x1000 $^ --oformat binary
+# src/kernel/kernel: src/boot/kernel_entry.o ${OBJ}
+# 	$(LD) -m elf_i386 -o $@.elf -Ttext 0x10000 $^
+# 	objcopy --only-keep-debug $@.elf kernel.sym
+# 	objcopy -O binary $@.elf $@.bin
+
+src/kernel/kernel: src/boot/kernel_entry.o ${OBJ}
+	$(LD) -m elf_i386 -o $@.elf -Ttext 0x1000 $^
+	objcopy --only-keep-debug $@.elf kernel.sym
+	objcopy -O binary $@.elf $@.bin
+
+src/kernel/kernel.bin: src/kernel/kernel
+	objcopy -O binary src/kernel/kernel.elf $@
+
+src/kernel/kernel.elf: src/kernel/kernel
+	objcopy --only-keep-debug $@ kernel.sym
 
 # src/kernel/kernel.bin: src/boot/kernel_entry.o ${OBJ}
 # 	$(CC) -T kernel_linker.ld -o $@  -ffreestanding -O2 -nostdlib $^ -lgcc

@@ -17,7 +17,7 @@ void main(void)
 	// terminal_writestring("Damn this really works!\n");
 
 	isr_install();
-
+    // asm volatile("xchg %bx, %bx");
     asm volatile("sti");
     // init_timer(50);
     /* Comment out the timer IRQ handler to read

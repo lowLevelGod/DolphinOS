@@ -22,7 +22,7 @@ second_stage:
     call do_e820
     ; xchg bx, bx
     popa
-    xchg bx, bx
+    ; xchg bx, bx
     call switch_to_pm
     jmp $
 
@@ -31,6 +31,7 @@ load_kernel:
   xor cx, cx
   mov ax, 3
   mov cx, 32
+  ; xchg bx, bx
   call disk_load_lba
   ; xchg bx, bx
   ret
@@ -81,7 +82,7 @@ boot_pm:
     ; mov ebx, msg_pm
     ; call print_string_p
     ; xchg bx, bx
-    call KERNEL_OFFSET
+    call 0x1000
     jmp $
 
 %include "gdt.asm"
@@ -92,7 +93,8 @@ boot_pm:
 msg_real db "Welcome to DolphinOS! <-- Real Mode -->", 0x0
 
 BOOT_DRIVE db 0
-KERNEL_OFFSET equ 0x1000
+; KERNEL_OFFSET equ 0x1000
+KERNEL_OFFSET equ 0x0100
 
 
 times 1536 - ($ - $$) db 0x0
