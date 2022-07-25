@@ -1,46 +1,57 @@
-; load 'dh' sectors from drive 'dl' into ES:BX
-disk_load:
-    ; pusha
-    ; reading from disk requires setting specific values in all registers
-    ; so we will overwrite our input parameters from 'dx'. Let's save it
-    ; to the stack for later use.
-    push dx
+[bits 16]
 
-    mov ah, 0x02 ; ah <- int 0x13 function. 0x02 = 'read'
-    mov al, dh   ; al <- number of sectors to read (0x01 .. 0x80)
-    mov cl, 0x02 ; cl <- sector (0x01 .. 0x11)
-                 ; 0x01 is our boot sector, 0x02 is the first 'available' sector
-    mov ch, 0x00 ; ch <- cylinder (0x0 .. 0x3FF, upper 2 bits in 'cl')
-    ; dl <- drive number. Our caller sets it as a parameter and gets it from BIOS
-    ; (0 = floppy, 1 = floppy2, 0x80 = hdd, 0x81 = hdd2)
-    mov dh, 0x00 ; dh <- head number (0x0 .. 0xF)
+; maxCylinder dw 80
+maxHeadFirstStage dw 2
+maxSectorFirstStage dw 18
+cylinderFirstStage dw 0
+headFirstStage db 0
+sectorFirstStage db 0
+productFirstStage db 0
 
-    ; [es:bx] <- pointer to buffer where the data will be stored
-    ; caller sets it up for us, and it is actually the standard location for int 13h
-    int 0x13      ; BIOS interrupt
-    jc disk_error ; if error (stored in the carry bit)
+; params ax -> lba
+lba_to_chsFirstStage:
+    pusha
+    xor         dx, dx
+    mov         bx, word [maxSectorFirstStage]
+    div         bx
+    inc         dx
+    mov         byte [sectorFirstStage], dl
+    xor         dx, dx
+    mov         bx, word [maxHeadFirstStage]
+    div         bx
+    mov         byte [cylinderFirstStage], al
+    mov         byte [headFirstStage], dl
+    popa
+    ret	
 
-    pop dx
-    cmp al, dh    ; BIOS also sets 'al' to the # of sectors read. Compare it.
-    jne sectors_error
-    ; popa
-    ret
-
-
-disk_error:
-    ; mov si, DISK_ERROR
-    ; call sprint
-    ; call print_nl
-    mov dh, ah ; ah = error code, dl = disk drive that dropped the error
-    ; call printreg16 ; check out the code at http://stanislavs.org/helppc/int_13-1.html
-    jmp disk_loop
-
-sectors_error:
-    ; mov si, SECTORS_ERROR
-    ; call sprint
-
-disk_loop:
-    jmp $
-
-DISK_ERROR: db "Disk read error", 0
-SECTORS_ERROR: db "Incorrect number", 0
+; params ax start sector/ cx number of sectors
+disk_load_lbaFirstStage:
+    xor bx, bx
+    mov es, bx
+    mov bx, second_stage
+    ; xchg bx, bx
+    retryFirstStage:
+        mov di, 5
+    sectorloopFirstStage:
+    ; xchg bx, bx
+        call lba_to_chsFirstStage
+        pusha
+        mov ah, 0x02
+        mov al, 0x1
+        mov ch, byte [cylinderFirstStage]
+        mov cl, byte [sectorFirstStage]
+        mov dh, byte [headFirstStage]
+        mov dl, byte [BOOT_DRIVE]
+        int 0x13
+        popa
+        jnc successFirstStage
+        sub di, 1
+        jnz sectorloopFirstStage
+        ; xchg bx, bx
+        jmp $
+    successFirstStage:
+        add bx, 512
+        ; xchg bx, bx
+        inc ax
+        loop retryFirstStage
+        ret

@@ -34,7 +34,7 @@ uint16_t vga_entry(unsigned char uc, uint8_t color)
  
 const size_t VGA_WIDTH = 80;
 const size_t VGA_HEIGHT = 25;
-const size_t VGA_ADDRESS = 0xB8000;
+const size_t VGA_ADDRESS = 0xC03FF000;
 
 const char shell_start_text[5] = "DOS>";
  

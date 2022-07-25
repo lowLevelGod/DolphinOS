@@ -23,4 +23,4 @@ init_pm:
 
     mov ebp, 0x90000
     mov esp, ebp
-    call boot_pm
+    call enable_higher_kernel_pm

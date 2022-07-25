@@ -57,4 +57,5 @@ void init_bitmap()
         uint32_t col = getBitmapCol(page);
         bitmap[row] = bitmap[row] | (0x1 << col);
     }
+    //TODO RESERVE AND MAP THE FIRST 1MB, SO I DON'T HAVE TO DEAL WITH STACK
 }

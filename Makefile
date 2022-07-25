@@ -21,15 +21,15 @@ all: disk_img src/kernel/kernel.elf
 disk_img: src/boot/bootloader.bin src/kernel/kernel.bin
 	cat $^ > $(DISK_IMG)
 
-src/kernel/kernel: src/boot/kernel_entry.o ${OBJ}
-	$(LD) -m elf_i386 -o $@.elf -Ttext 0x10000 $^
-	objcopy --only-keep-debug $@.elf kernel.sym
-	objcopy -O binary $@.elf $@.bin
-
 # src/kernel/kernel: src/boot/kernel_entry.o ${OBJ}
-# 	$(LD) -m elf_i386 -o $@.elf -Ttext 0x1000 $^
+# 	$(LD) -m elf_i386 -o $@.elf -Ttext 0x10000 $^
 # 	objcopy --only-keep-debug $@.elf kernel.sym
 # 	objcopy -O binary $@.elf $@.bin
+
+src/kernel/kernel: src/boot/kernel_entry.o ${OBJ}
+	$(LD) -m elf_i386 -o $@.elf -Ttext 0xC0000000 $^
+	objcopy --only-keep-debug $@.elf kernel.sym
+	objcopy -O binary $@.elf $@.bin
 
 src/kernel/kernel.bin: src/kernel/kernel
 	objcopy -O binary src/kernel/kernel.elf $@
