@@ -1,12 +1,13 @@
 #include "../../headers/kernel/utils.h"
 #include "../../headers/libc/string.h"
+#include "../../headers/drivers/io.h"
 #define NO_BASE 16
 
 
-void int_to_ascii(uint64_t x, char* s)
+void int_to_ascii(uint32_t x, char* s)
 {
     size_t len = 0;
-    int c = x;
+    uint32_t c = x;
     if (c == 0)
         s[len++] = '0';
     while (c)

@@ -2,7 +2,7 @@
 C_SOURCES = $(wildcard src/boot/*.c src/cpu/*.c src/drivers/*.c src/kernel/*.c src/libc/*.c)
 HEADERS = $(wildcard headers/cpu/*.h headers/drivers/*.h headers/kernel/*.h headers/libc/*.h)
 # Nice syntax for file extension replacement
-OBJ = ${C_SOURCES:.c=.o src/cpu/interrupt.o} 
+OBJ = ${C_SOURCES:.c=.o src/cpu/interrupt.o src/cpu/enablepaging.o} 
 OUTS = $(wildcard src/boot/*.o src/cpu/*.o src/kernel/*.o src/drivers/*.o src/libc/*.o) 
 BINS = $(wildcard src/boot/*.bin src/cpu/*.bin src/kernel/*.bin src/libc/*.bin)
 ELFS = $(wildcard src/boot/*.elf src/cpu/*.elf src/kernel/*.elf src/libc/*.elf)
@@ -27,7 +27,7 @@ disk_img: src/boot/bootloader.bin src/kernel/kernel.bin
 # 	objcopy -O binary $@.elf $@.bin
 
 src/kernel/kernel: src/boot/kernel_entry.o ${OBJ}
-	$(LD) -m elf_i386 -o $@.elf -Ttext 0xC0000000 $^
+	$(LD) -m elf_i386 -o $@.elf -Ttext 0xC0010000 $^
 	objcopy --only-keep-debug $@.elf kernel.sym
 	objcopy -O binary $@.elf $@.bin
 

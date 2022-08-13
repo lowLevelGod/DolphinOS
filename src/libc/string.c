@@ -1,4 +1,7 @@
 #include "../../headers/libc/string.h"
+#include "../../headers/drivers/io.h"
+#include "../../headers/kernel/utils.h"
+#include <stdarg.h>
 
 int memcmp(const void *a, const void *b, size_t n)
 {
@@ -69,4 +72,49 @@ void reverse(char *s)
 		s[len - i - 1] = s[len - i - 1] ^ s[i];
 		s[i] = s[i] ^ s[len - i - 1];
 	}
+}
+
+void kprintf(const char* format, ...)
+{
+    va_list args;
+    va_start(args, format);
+ 
+    while (*format != '\0') {
+		if (*format == '%')
+		{
+			++format;
+			switch (*format)
+			{
+				case 'c':
+					int c = va_arg(args, int);
+					terminal_putchar(c);
+					break;
+				case 'd':
+					int d = va_arg(args, unsigned int);
+					char tmp[100];
+					int_to_ascii(d, tmp);
+					terminal_writestring(tmp);
+					break;
+				case 's':
+					const char* s = va_arg(args, char*);
+					terminal_writestring(s);
+					break;
+			}
+		}else if (*format == '\\')
+		{
+			++format;
+			switch (*format)
+			{
+				case 'n':
+					terminal_putchar('\n');
+					break;
+			}
+		}else
+		{
+			terminal_putchar(*format);
+		}
+        ++format;
+    }
+ 
+    va_end(args);
 }

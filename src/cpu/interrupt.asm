@@ -13,12 +13,16 @@ isr_common_stub:
 	mov es, ax
 	mov fs, ax
 	mov gs, ax
+
+    mov eax, cr2
+    push eax ; used for page fault linear address
 	
     ; 2. Call C handler
     cld
 	call isr_handler
 	
     ; 3. Restore state
+    pop eax
 	pop eax 
 	mov ds, ax
 	mov es, ax
@@ -40,7 +44,13 @@ irq_common_stub:
     mov es, ax
     mov fs, ax
     mov gs, ax
+
+    mov eax, cr2
+    push eax ; used for page fault linear address
+
     call irq_handler ; Different than the ISR code
+
+    pop eax
     pop ebx  ; Different than the ISR code
     mov ds, bx
     mov es, bx

@@ -8,8 +8,19 @@
 #define E820_FREE 0x1
 #define PAGE_SIZE 4096
 #define PAGE_NUMBER 32768
-#define PAGE_ALLOCATED 1
-#define PAGE_FREE 0
+#define PAGE_STACK_SIZE 100
+
+struct PageStack
+{
+    uint64_t stack[PAGE_STACK_SIZE];
+    size_t sz;
+};
+
+enum PHYSICAL_PAGE_STATUS
+{
+    PAGE_FREE = 0,
+    PAGE_ALLOCATED = 1,
+};
 
 typedef struct __attribute__((packed))
 {
@@ -27,6 +38,12 @@ typedef struct __attribute__((packed))
     mem_entry_t entries[MEM_MAP_SIZE];
 } mem_map;
 
-void init_bitmap();
+uint64_t kAllocPhysical();
+void createPageDirEntry(uint32_t);
+void mapPage(uint32_t);
+void init_paging();
+void init_pmm();
+int getPageStatus(uint64_t);
+void setPageStatus(uint64_t, enum PHYSICAL_PAGE_STATUS);
 
 #endif

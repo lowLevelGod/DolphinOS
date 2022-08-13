@@ -9,10 +9,10 @@ static void timer_callback(registers_t regs) {
     tick++;
     terminal_writestring("Tick: ");
     
-    char tick_ascii[256] = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-    int_to_ascii(tick, tick_ascii);
-    terminal_writestring(tick_ascii);
-    terminal_writestring("\n");
+    // char tick_ascii[256] = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    // int_to_ascii(tick, tick_ascii);
+    // terminal_writestring(tick_ascii);
+    // terminal_writestring("\n");
 }
 
 void init_timer(uint32_t freq) {

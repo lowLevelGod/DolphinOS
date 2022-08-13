@@ -114,13 +114,10 @@ char *exception_messages[] = {
 };
 
 void isr_handler(registers_t r) {
-    terminal_writestring("received interrupt: ");
-    char s[3] = "ab";
-    int_to_ascii(r.int_no, s);
-    terminal_writestring(s);
-    terminal_writestring("\n");
-    terminal_writestring(exception_messages[r.int_no]);
-    terminal_writestring("\n");
+    if (interrupt_handlers[r.int_no] != 0) {
+        isr_t handler = interrupt_handlers[r.int_no];
+        handler(r);
+    }
 }
 
 void register_interrupt_handler(uint8_t n, isr_t handler) {
