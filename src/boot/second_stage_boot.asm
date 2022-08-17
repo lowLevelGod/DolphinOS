@@ -20,7 +20,7 @@ second_stage:
     ; call sprint
     pusha
     call do_e820
-    ; xchg bx, bx
+    xchg bx, bx
     popa
     ; xchg bx, bx
     call switch_to_pm
@@ -41,7 +41,7 @@ load_kernel:
 
 ; align 4096 HARDCODED PAY ATTENTION
 ; times 5120 - ($ - $$) db 0x0
-times 374 db 0x0
+times 372 db 0x0
 
 boot_page_directory:
   times 4096 db 0x0

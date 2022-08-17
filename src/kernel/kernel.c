@@ -12,12 +12,12 @@
 void init()
 {
     terminal_initialize();
+    init_pmm();
     init_paging();
     isr_install();
     asm volatile("sti");
     init_keyboard();
     init_pageFault();
-    init_pmm();
 }
 
 void main(void) 
@@ -25,12 +25,13 @@ void main(void)
     init();
     kprintf("Welcome to DolphinOS\n");
     uint32_t* ptr = (uint32_t*)0xD0000000;
-    uint32_t* ptr2 = (uint32_t*)0xE0000000;
+    uint32_t* ptr2 = (uint32_t*)0xD0010000;
     *ptr = 1;
     *ptr = 39;
-    uint32_t tmp = *ptr;
-    kprintf("Value %d written to address %d\n", tmp, ptr);// for some reason value is 0 every time
+    // *ptr2 = 5;
+    // uint32_t tmp = *ptr2;
     kprintf("Value %d written to address %d\n", *ptr2, ptr2); 
+    kprintf("Value %d written to address %d\n", *ptr, ptr);// for some reason value is 0 every time
 	// terminal_writestring("Welcome to DolphinOS\n");
 	// // terminal_writestring("Damn this really works!\n");
 

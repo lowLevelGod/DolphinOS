@@ -62,6 +62,7 @@ void createPageDirEntry(uint32_t index)
 void createPageTableEntry(uint32_t index)
 {
     uint32_t page = kAllocPhysical();
+    kprintf("Page allocated: %d\n", page);
     test_page_table[index] = (page * 0x1000) | 3;
 }
 
@@ -96,15 +97,18 @@ void init_pmm()
         bitmap[i] = 0xFFFFFFFF;
     }
 
+    // kprintf("Size: %d\n", mmap->size);
     for (size_t i = 0; i < (size_t)mmap->size; ++i)
     {
+            // kprintf("Base:%d Size: %d Type: %d\n", mmap->entries[i].base_low, mmap->entries[i].size_low, mmap->entries[i].type);
         if (mmap->entries[i].type == E820_FREE)
         {
-            uint64_t first_page = mmap->entries[i].base + PAGE_SIZE - 
-            mmap->entries[i].base % PAGE_SIZE; // we make sure not to cross reserved memory, so we cut down to the first 4kib align
+            uint64_t first_page = mmap->entries[i].base_low + PAGE_SIZE - 
+            mmap->entries[i].base_low % PAGE_SIZE; // we make sure not to cross reserved memory, so we cut down to the first 4kib align
 
-            uint64_t last_page = mmap->entries[i].base + mmap->entries[i].size - 
-            (mmap->entries[i].base + mmap->entries[i].size) % PAGE_SIZE; // same as above
+            uint64_t last_page = mmap->entries[i].base_low + mmap->entries[i].size_low - 
+            (mmap->entries[i].base_low + mmap->entries[i].size_low) % PAGE_SIZE; // same as above
+            
 
             for (uint64_t current_page = first_page; current_page <= last_page; ++current_page)
             {

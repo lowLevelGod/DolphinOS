@@ -4,7 +4,7 @@
 #include <stddef.h>
 
 #define MEM_MAP_SIZE 128
-#define MEM_MAP_LOCATION 0x9000
+#define MEM_MAP_LOCATION 0xb000
 #define E820_FREE 0x1
 #define PAGE_SIZE 4096
 #define PAGE_NUMBER 32768
@@ -24,10 +24,10 @@ enum PHYSICAL_PAGE_STATUS
 
 typedef struct __attribute__((packed))
 {
-    uint64_t base;
-    // uint32_t base_high;
-    uint64_t size;
-    // uint32_t size_high;
+    uint32_t base_low;
+    uint32_t base_high;
+    uint32_t size_low;
+    uint32_t size_high;
     uint32_t type;
     uint32_t alignment;
 } mem_entry_t;
