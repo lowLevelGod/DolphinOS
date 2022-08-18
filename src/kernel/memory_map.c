@@ -31,6 +31,7 @@ void init_paging()
     {
         // As the address is page aligned, it will always leave 12 bits zeroed.
         // Those bits are used by the attributes ;)
+        test_page_table[i] = 0x00000002;
         identity_page_table[i] = (i * 0x1000) | 3;
         kernel_page_table[i] = (i * 0x1000) | 3; // attributes: supervisor level, read/write, present.
     }
@@ -46,6 +47,8 @@ void init_paging()
     page_directory[768] = kernelpt | 3;
     page_directory[0] = identitypt | 3; // we are keeping the identity mapping for now because of gdt wrong linear address
     
+    kprintf("Page dir address: %d\n", pagedir);
+
     loadPageDirectory(pagedir);
     enablePaging();
 }
@@ -74,14 +77,14 @@ static uint32_t last_usable_page = PAGE_NUMBER;
 // static const kernel_first_page = 0x10;
 // static const kernel_last_page = 0x14;
 
-static inline size_t getBitmapRow(uint64_t current_page)
+static inline size_t getBitmapRow(uint32_t current_page)
 {
-    return current_page / PAGE_SIZE / 8;
+    return current_page / 32;
 }
 
-static inline uint32_t getBitmapCol(uint64_t current_page)
+static inline uint32_t getBitmapCol(uint32_t current_page)
 {
-    return current_page / PAGE_SIZE % 8;
+    return current_page % 32;
 }
 
 void init_pmm()
@@ -100,20 +103,21 @@ void init_pmm()
     // kprintf("Size: %d\n", mmap->size);
     for (size_t i = 0; i < (size_t)mmap->size; ++i)
     {
-            // kprintf("Base:%d Size: %d Type: %d\n", mmap->entries[i].base_low, mmap->entries[i].size_low, mmap->entries[i].type);
+            kprintf("Base:%d Size: %d Type: %d\n", mmap->entries[i].base_low, mmap->entries[i].size_low, mmap->entries[i].type);
         if (mmap->entries[i].type == E820_FREE)
         {
-            uint64_t first_page = mmap->entries[i].base_low + PAGE_SIZE - 
-            mmap->entries[i].base_low % PAGE_SIZE; // we make sure not to cross reserved memory, so we cut down to the first 4kib align
+            uint32_t first_page = (mmap->entries[i].base_low + PAGE_SIZE - 
+            mmap->entries[i].base_low % PAGE_SIZE) / PAGE_SIZE; // we make sure not to cross reserved memory, so we cut down to the first 4kib align
 
-            uint64_t last_page = mmap->entries[i].base_low + mmap->entries[i].size_low - 
-            (mmap->entries[i].base_low + mmap->entries[i].size_low) % PAGE_SIZE; // same as above
+            uint32_t last_page = (mmap->entries[i].base_low + mmap->entries[i].size_low - 
+            (mmap->entries[i].base_low + mmap->entries[i].size_low) % PAGE_SIZE - PAGE_SIZE) / PAGE_SIZE; // same as above
             
+            kprintf("Range %d |---> %d\n", first_page, last_page);
 
-            for (uint64_t current_page = first_page; current_page <= last_page; ++current_page)
+            for (uint32_t current_page = first_page; current_page <= last_page; ++current_page)
             {
-                size_t row = current_page / PAGE_SIZE / 8;
-                uint32_t col = current_page / PAGE_SIZE % 8;
+                size_t row = getBitmapRow(current_page);
+                uint32_t col = getBitmapCol(current_page);
                 bitmap[row] = bitmap[row] ^ (0x1 << col); // flip the bit at col in uint32_t numbered row
             }
 
@@ -123,7 +127,7 @@ void init_pmm()
     }
 
     // RESERVE THE FIRST 4MB FOR KERNEL
-    for (uint64_t page = 0; page < 0x400; ++page) // 0x400 = 1024
+    for (uint32_t page = 0; page < 0x400; ++page) // 0x400 = 1024
     {
         size_t row = getBitmapRow(page);
         uint32_t col = getBitmapCol(page);
@@ -196,11 +200,22 @@ void mapPage(uint32_t vaddr)
     uint32_t ptableIndex = (vaddr >> 12) & 0x3ff;
 
     if (!(page_directory[pdirIndex] & 0x1))
+    {
+        // kprintf("Page Table: %d not found !\n", pdirIndex);
         createPageDirEntry(pdirIndex);
+    }
     if (!(test_page_table[ptableIndex] & 0x1))
+    {
+        // kprintf("Page: %d not found !\n", ptableIndex);
         createPageTableEntry(ptableIndex);
+    }
 
     uint32_t pagedir = (uint32_t)&page_directory;
     pagedir -= higherHalfBase;
+    // kprintf("Page dir address: %d\n", pagedir);
     loadPageDirectory(pagedir);
+
+    // for (int i = 0; i < 1024; ++i)
+    //     if (page_directory[i] & 0x1)
+    //     kprintf("Page dir entry %d has value %d\n", i, page_directory[i]);
 }
