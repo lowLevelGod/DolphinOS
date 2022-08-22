@@ -20,7 +20,7 @@ second_stage:
     ; call sprint
     pusha
     call do_e820
-    xchg bx, bx
+    ; xchg bx, bx
     popa
     ; xchg bx, bx
     call switch_to_pm
@@ -41,7 +41,7 @@ load_kernel:
 
 ; align 4096 HARDCODED PAY ATTENTION
 ; times 5120 - ($ - $$) db 0x0
-times 372 db 0x0
+times 374 db 0x0
 
 boot_page_directory:
   times 4096 db 0x0
@@ -62,9 +62,19 @@ boot_pm:
 	; .text and .rodata as writable. Mind security and map them as non-writable.
   page_table_loop:
     mov edx, esi
-    or edx, 0x003
+    or edx, 0x3
     mov dword [edi], edx
 
+    push edi
+    push esi
+
+    mov edi, boot_page_directory
+    lea esi, [ecx * 4 - 4]
+    add edi, esi
+    mov dword [edi], 0x2
+
+    pop esi
+    pop edi
     ; Size of page is 4096 bytes.
     add esi, 4096
     ; Size of entries in boot_page_table1 is 4 bytes.
@@ -81,12 +91,15 @@ boot_pm:
 
   mov ebx, boot_page_directory
   mov eax, boot_page_table1
-  or eax, 0x003
+  or eax, 0x3
 
   mov dword [ebx], eax
   add ebx, 3072 ; 768(entry) * 4
   mov dword [ebx], eax
-
+  mov ebx, boot_page_directory
+  add ebx, 4092 ; map last entry of page dir to itself
+  mov dword[ebx], boot_page_directory
+  or dword[ebx], 0x003
 
   pop eax
   pop ebx
@@ -120,7 +133,6 @@ paging_enabled_pm:
 	mov esp, 0xC0090000
 
 	; Enter the high-level kernel.
-  xchg bx, bx
   xor ecx, ecx
   mov ecx, 0xC0010000 ; OK SO I NEED TO ADD 0X10000. HAVE TO FIX LATER
 	call ecx

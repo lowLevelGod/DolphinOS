@@ -3,14 +3,16 @@
 #include "../../headers/kernel/utils.h"
 
 const uint32_t higherHalfBase = 0xC0000000;
-
-uint32_t page_directory[1024] __attribute__((aligned(4096)));
-uint32_t kernel_page_table[1024] __attribute__((aligned(4096)));
-uint32_t identity_page_table[1024] __attribute__((aligned(4096)));
-uint32_t test_page_table[1024] __attribute__((aligned(4096)));
+uint32_t* const pageTableEntries = (uint32_t*)0xFFC00000;
+uint32_t* const pageDirEntries = (uint32_t*)0xFFFFF000; 
 
 extern void loadPageDirectory(uint32_t*);
 extern void enablePaging();
+
+uint32_t getPageDirEntryAddr(uint32_t entry)
+{
+    return (entry & ~0x3ff);
+}
 
 void init_paging()
 {
@@ -21,52 +23,35 @@ void init_paging()
         //   Supervisor: Only kernel-mode can access them
         //   Write Enabled: It can be both read from and written to
         //   Not Present: The page table is not present
-        page_directory[i] = 0x00000002;
+        if (i != 768 && i != 1023 && i != 0) // higher half kernel entry and self map
+            pageDirEntries[i] = 0x00000002;
     }
 
-    // holds the physical address where we want to start mapping these pages to.
-    // in this case, we want to map these pages to the very beginning of memory.
-    //we will fill all 1024 entries in the table, mapping 4 megabytes
-    for(size_t i = 0; i < 1024; i++)
-    {
-        // As the address is page aligned, it will always leave 12 bits zeroed.
-        // Those bits are used by the attributes ;)
-        test_page_table[i] = 0x00000002;
-        identity_page_table[i] = (i * 0x1000) | 3;
-        kernel_page_table[i] = (i * 0x1000) | 3; // attributes: supervisor level, read/write, present.
-    }
-
-    // 768 is page directory entry for 0xC0000000 = 768 * 1024 * 4096
-    uint32_t kernelpt = (uint32_t)&kernel_page_table;
-    kernelpt -= higherHalfBase;
-    uint32_t pagedir = (uint32_t)&page_directory;
-    pagedir -= higherHalfBase;
-    uint32_t identitypt = (uint32_t)&identity_page_table;
-    identitypt -= higherHalfBase;
-
-    page_directory[768] = kernelpt | 3;
-    page_directory[0] = identitypt | 3; // we are keeping the identity mapping for now because of gdt wrong linear address
-    
-    kprintf("Page dir address: %d\n", pagedir);
-
-    loadPageDirectory(pagedir);
+    loadPageDirectory(getPageDirEntryAddr(pageDirEntries[1023]));
     enablePaging();
 }
 
 void createPageDirEntry(uint32_t index)
 {
-    // TODO
-    // testing purposes only
-    uint32_t testpt = (uint32_t)&test_page_table;
-    testpt -= higherHalfBase;
-    page_directory[index] = testpt | 3;
+    uint32_t newpt = (uint32_t)(kAllocPhysical() * 0x1000);
+
+    pageDirEntries[index] = newpt | 3;
+    loadPageDirectory(getPageDirEntryAddr(pageDirEntries[1023]));
+    uint32_t *pt = (uint32_t*)(pageTableEntries + 1024 * index);
+
+    // initialize new page table with non-present pages
+    for(size_t i = 0; i < 1024; i++)
+    {
+        pt[i] = 0x00000002;
+    }
 }
 
-void createPageTableEntry(uint32_t index)
+void createPageTableEntry(uint32_t pdirIndex, uint32_t ptIndex)
 {
     uint32_t page = kAllocPhysical();
-    kprintf("Page allocated: %d\n", page);
-    test_page_table[index] = (page * 0x1000) | 3;
+
+    pageTableEntries[pdirIndex * 1024 + ptIndex] = (page * 0x1000) | 3;
+    loadPageDirectory(getPageDirEntryAddr(pageDirEntries[1023]));
 }
 
 uint32_t bitmap[PAGE_NUMBER];
@@ -103,7 +88,6 @@ void init_pmm()
     // kprintf("Size: %d\n", mmap->size);
     for (size_t i = 0; i < (size_t)mmap->size; ++i)
     {
-            kprintf("Base:%d Size: %d Type: %d\n", mmap->entries[i].base_low, mmap->entries[i].size_low, mmap->entries[i].type);
         if (mmap->entries[i].type == E820_FREE)
         {
             uint32_t first_page = (mmap->entries[i].base_low + PAGE_SIZE - 
@@ -111,8 +95,6 @@ void init_pmm()
 
             uint32_t last_page = (mmap->entries[i].base_low + mmap->entries[i].size_low - 
             (mmap->entries[i].base_low + mmap->entries[i].size_low) % PAGE_SIZE - PAGE_SIZE) / PAGE_SIZE; // same as above
-            
-            kprintf("Range %d |---> %d\n", first_page, last_page);
 
             for (uint32_t current_page = first_page; current_page <= last_page; ++current_page)
             {
@@ -199,23 +181,9 @@ void mapPage(uint32_t vaddr)
     uint32_t pdirIndex = (vaddr >> 22) & 0x3ff;
     uint32_t ptableIndex = (vaddr >> 12) & 0x3ff;
 
-    if (!(page_directory[pdirIndex] & 0x1))
-    {
-        // kprintf("Page Table: %d not found !\n", pdirIndex);
+    if (!(pageDirEntries[pdirIndex] & 0x1))
         createPageDirEntry(pdirIndex);
-    }
-    if (!(test_page_table[ptableIndex] & 0x1))
-    {
-        // kprintf("Page: %d not found !\n", ptableIndex);
-        createPageTableEntry(ptableIndex);
-    }
 
-    uint32_t pagedir = (uint32_t)&page_directory;
-    pagedir -= higherHalfBase;
-    // kprintf("Page dir address: %d\n", pagedir);
-    loadPageDirectory(pagedir);
-
-    // for (int i = 0; i < 1024; ++i)
-    //     if (page_directory[i] & 0x1)
-    //     kprintf("Page dir entry %d has value %d\n", i, page_directory[i]);
+    if (!(pageTableEntries[pdirIndex * 1024 + ptableIndex] & 0x1))
+        createPageTableEntry(pdirIndex, ptableIndex);
 }

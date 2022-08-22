@@ -25,16 +25,20 @@ void main(void)
     init();
     kprintf("Welcome to DolphinOS\n");
     uint32_t* ptr = (uint32_t*)0xD0000000;
-    uint32_t* ptr2 = (uint32_t*)0xD0001000;
+    uint32_t* ptr2 = (uint32_t*)0xE0001000;
+    uint32_t* ptr3 = (uint32_t*)0xA000000;
     *ptr = 1;
     *ptr = 39;
     *ptr2 = 5;
+    *ptr3 = 51;
     // *ptr2 = 5;
     // uint32_t tmp = *ptr2;
     kprintf("Value %d written to address %d\n", *ptr2, ptr2); 
     kprintf("Value %d written to address %d\n", *ptr, ptr);// for some reason value is 0 every time
+    kprintf("Value %d written to address %d\n", *ptr3, ptr3); 
 	// terminal_writestring("Welcome to DolphinOS\n");
 	// // terminal_writestring("Damn this really works!\n");
+    while (1) {}
 
     asm volatile("xchg %bx, %bx");
     // // asm volatile("int $2");
